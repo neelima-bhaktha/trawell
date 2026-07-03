@@ -7,6 +7,7 @@ interface AuthContextType {
   user: User | null;
   role: string | null;
   approvalStatus: string | null;
+  driverData: any | null;
   isLoading: boolean;
 }
 
@@ -14,6 +15,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   role: null,
   approvalStatus: null,
+  driverData: null,
   isLoading: true,
 });
 
@@ -23,6 +25,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const [approvalStatus, setApprovalStatus] = useState<string | null>(null);
+  const [driverData, setDriverData] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -53,8 +56,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               unsubscribeDriver = onSnapshot(doc(db, 'drivers', firebaseUser.uid), (driverDoc) => {
                 if (driverDoc.exists()) {
                   setApprovalStatus(driverDoc.data().approvalStatus);
+                  setDriverData(driverDoc.data());
                 } else {
                   setApprovalStatus('pending');
+                  setDriverData(null);
                 }
                 setIsLoading(false);
               }, (error) => {
@@ -64,12 +69,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             } else {
               if (unsubscribeDriver) { unsubscribeDriver(); unsubscribeDriver = null; }
               setApprovalStatus(null);
+              setDriverData(null);
               setIsLoading(false);
             }
           } else {
             // User doc doesn't exist
             setRole(null);
             setApprovalStatus(null);
+            setDriverData(null);
             setIsLoading(false);
           }
         }, (error) => {
@@ -80,6 +87,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
         setRole(null);
         setApprovalStatus(null);
+        setDriverData(null);
         setIsLoading(false);
       }
     });
@@ -91,7 +99,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, role, approvalStatus, isLoading }}>
+    <AuthContext.Provider value={{ user, role, approvalStatus, driverData, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

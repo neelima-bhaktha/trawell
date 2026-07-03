@@ -1,31 +1,25 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { auth } from '../../config/firebase';
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+export default function PendingTripsScreen() {
+  const handleLogout = () => {
+    auth.signOut();
+  };
 
-export default function TabOneScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Pending Trips</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
+    <View className="flex-1 bg-slate-900 justify-center items-center px-6">
+      <Text className="text-white text-2xl font-bold mb-4">Pending Trips</Text>
+      <Text className="text-slate-400 text-center mb-8">
+        This is a placeholder for the Driver Dashboard. We haven't built the trips list yet!
+      </Text>
+
+      <TouchableOpacity 
+        className="bg-slate-800 rounded-lg p-4 w-full items-center min-h-[56px] justify-center mt-4"
+        onPress={handleLogout}
+      >
+        <Text className="text-red-400 font-bold text-lg">Log Out</Text>
+      </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
-});
