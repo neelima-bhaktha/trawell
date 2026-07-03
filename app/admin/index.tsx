@@ -1,31 +1,40 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { db, auth } from '../../config/firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { useRouter } from 'expo-router';
 
 export default function AdminDashboard() {
   const [pendingDrivers, setPendingDrivers] = useState<any[]>([]);
+  const [activeTrips, setActiveTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     // Listen to drivers collection for any driver with approvalStatus == 'pending'
-    const q = query(collection(db, 'drivers'), where('approvalStatus', '==', 'pending'));
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const qDrivers = query(collection(db, 'drivers'), where('approvalStatus', '==', 'pending'));
+    const unsubscribeDrivers = onSnapshot(qDrivers, (snapshot) => {
       const drivers: any[] = [];
       snapshot.forEach((doc) => {
         drivers.push({ id: doc.id, ...doc.data() });
       });
       setPendingDrivers(drivers);
-      setLoading(false);
-    }, (error) => {
-      console.error("Error fetching pending drivers:", error);
+    });
+
+    const qTrips = query(collection(db, 'trips'), where('status', 'in', ['pending', 'ongoing']));
+    const unsubscribeTrips = onSnapshot(qTrips, (snapshot) => {
+      const trips: any[] = [];
+      snapshot.forEach((doc) => {
+        trips.push({ id: doc.id, ...doc.data() });
+      });
+      setActiveTrips(trips);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeDrivers();
+      unsubscribeTrips();
+    };
   }, []);
 
   const handleLogout = () => {
@@ -41,24 +50,59 @@ export default function AdminDashboard() {
   }
 
   return (
-    <View className="flex-1 bg-slate-900 px-6 pt-10">
+    <ScrollView className="flex-1 bg-slate-900 px-6 pt-10" contentContainerStyle={{ paddingBottom: 60 }}>
       <View className="flex-row justify-between items-center mb-6">
         <Text className="text-3xl font-bold text-white">Dashboard</Text>
         <TouchableOpacity onPress={handleLogout} className="bg-red-600/20 px-4 py-2 rounded-lg">
           <Text className="text-red-400 font-bold">Log Out</Text>
         </TouchableOpacity>
       </View>
+
+      <TouchableOpacity 
+        className="bg-emerald-600 p-4 rounded-xl mb-8 items-center"
+        onPress={() => router.push('/admin/create-trip' as any)}
+      >
+        <Text className="text-white font-bold text-lg">+ Create New Trip</Text>
+      </TouchableOpacity>
       
-      <Text className="text-slate-400 mb-4 font-semibold uppercase tracking-wider">Pending Driver Approvals</Text>
+      
+      <Text className="text-slate-400 mb-4 font-semibold uppercase tracking-wider">Active Trips</Text>
+      
+      {activeTrips.length === 0 ? (
+        <View className="mb-8 items-center">
+          <Text className="text-slate-500 text-lg">No active trips found.</Text>
+        </View>
+      ) : (
+        <View className="mb-8">
+          {activeTrips.map((trip) => (
+            <View key={trip.id} className="bg-slate-800 p-4 rounded-xl mb-4 border border-slate-700">
+              <View className="flex-row justify-between mb-2">
+                <Text className="text-white font-bold text-lg">{trip.passengerName}</Text>
+                <View className={`px-3 py-1 rounded-full ${trip.status === 'ongoing' ? 'bg-blue-500/20' : 'bg-amber-500/20'}`}>
+                  <Text className={`${trip.status === 'ongoing' ? 'text-blue-400' : 'text-amber-500'} font-semibold text-xs uppercase`}>
+                    {trip.status}
+                  </Text>
+                </View>
+              </View>
+              <Text className="text-slate-400 text-sm mb-1">From: {trip.pickupLocation}</Text>
+              <Text className="text-slate-400 text-sm">To: {trip.dropoffLocation}</Text>
+              <Text className="text-slate-500 text-xs mt-2">Driver ID: {trip.driverId.substring(0, 8)}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      <Text className="text-slate-400 mb-4 font-semibold uppercase tracking-wider mt-4">Pending Driver Approvals</Text>
       
       {pendingDrivers.length === 0 ? (
-        <View className="flex-1 justify-center items-center">
+        <View className="mb-8 items-center">
           <Text className="text-slate-500 text-lg">No pending drivers found.</Text>
         </View>
       ) : (
         <FlatList
           data={pendingDrivers}
           keyExtractor={(item) => item.id}
+          scrollEnabled={false}
           renderItem={({ item }) => (
             <TouchableOpacity 
               className="bg-slate-800 p-4 rounded-xl mb-4 border border-slate-700 flex-row justify-between items-center"
@@ -77,6 +121,6 @@ export default function AdminDashboard() {
           )}
         />
       )}
-    </View>
+    </ScrollView>
   );
 }
