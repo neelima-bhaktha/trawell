@@ -42,3 +42,8 @@ yarn-error.*
 
 # Firebase credentials
 config/firebase.ts
+
+# Environment variables
+.env
+.env.local
+.env.*

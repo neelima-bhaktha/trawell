@@ -22,7 +22,8 @@ export default function CreateTripScreen() {
       return;
     }
     try {
-      const res = await fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&key=AIzaSyAAdBsaBCODDox0M0sJZUnqvnh44xBdAiA&language=en`);
+      const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
+      const res = await fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&key=${apiKey}&language=en`);
       const data = await res.json();
       if (data.status === 'OK') {
         setResults(data.predictions);
