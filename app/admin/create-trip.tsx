@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert, LogBox } from 'react-native';
 import { useRouter } from 'expo-router';
 import { db } from '../../config/firebase';
-import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
 
 LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
 
@@ -38,19 +38,22 @@ export default function CreateTripScreen() {
   const [drivers, setDrivers] = useState<any[]>([]);
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
 
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const fetchApprovedDrivers = async () => {
+    const fetchData = async () => {
       try {
-        const q = query(collection(db, 'drivers'), where('approvalStatus', '==', 'approved'));
-        const querySnapshot = await getDocs(q);
+        // Fetch drivers
+        const qDrivers = query(collection(db, 'drivers'), where('approvalStatus', '==', 'approved'));
+        const driverSnapshot = await getDocs(qDrivers);
         const approvedDrivers: any[] = [];
         
-        for (const driverDoc of querySnapshot.docs) {
+        for (const driverDoc of driverSnapshot.docs) {
           const driverData = driverDoc.data();
-          // Fetch user document to get the driver's actual name
           const userDocSnap = await getDoc(doc(db, 'users', driverDoc.id));
           const userData = userDocSnap.exists() ? userDocSnap.data() : {};
           
@@ -60,20 +63,29 @@ export default function CreateTripScreen() {
             ...driverData 
           });
         }
-        
         setDrivers(approvedDrivers);
+
+        // Fetch available vehicles
+        const qVehicles = query(collection(db, 'vehicles'), where('status', '==', 'available'));
+        const vehicleSnapshot = await getDocs(qVehicles);
+        const availableVehicles: any[] = [];
+        vehicleSnapshot.forEach((doc) => {
+          availableVehicles.push({ id: doc.id, ...doc.data() });
+        });
+        setVehicles(availableVehicles);
+        
       } catch (error) {
-        console.error("Error fetching drivers:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchApprovedDrivers();
+    fetchData();
   }, []);
 
   const handleCreateTrip = async () => {
-    if (!passengerName || !pickup || !dropoff || !selectedDriverId) {
-      Alert.alert('Missing Info', 'Please fill out all fields and select a driver.');
+    if (!passengerName || !pickup || !dropoff || !selectedDriverId || !selectedVehicleId) {
+      Alert.alert('Missing Info', 'Please fill out all fields, and select a driver and vehicle.');
       return;
     }
 
@@ -84,11 +96,17 @@ export default function CreateTripScreen() {
         pickupLocation: pickup,
         dropoffLocation: dropoff,
         driverId: selectedDriverId,
+        vehicleId: selectedVehicleId,
         status: 'pending',
         createdAt: serverTimestamp(),
       });
 
-      Alert.alert('Success', 'Trip assigned to driver successfully!');
+      // Update vehicle status to in-trip
+      await updateDoc(doc(db, 'vehicles', selectedVehicleId), {
+        status: 'in-trip'
+      });
+
+      Alert.alert('Success', 'Trip assigned successfully!');
       router.back();
     } catch (error: any) {
       Alert.alert('Error', error.message);
@@ -200,16 +218,36 @@ export default function CreateTripScreen() {
               onPress={() => setSelectedDriverId(driver.id)}
             >
               <Text className="text-white font-semibold">{driver.name}</Text>
-              <Text className="text-slate-400 text-sm">Driver ID: {driver.id.substring(0, 8)} • Status: Available</Text>
+              <Text className="text-slate-400 text-sm">Driver ID: {driver.id.substring(0, 8)}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      <Text className="text-slate-300 font-semibold mb-2">Assign Vehicle</Text>
+      {vehicles.length === 0 ? (
+        <Text className="text-amber-500 mb-6 bg-amber-500/10 p-4 rounded-lg">
+          No available vehicles. Add one in Fleet Vehicles.
+        </Text>
+      ) : (
+        <View className="mb-6">
+          {vehicles.map(vehicle => (
+            <TouchableOpacity
+              key={vehicle.id}
+              className={`p-4 rounded-lg mb-2 border ${selectedVehicleId === vehicle.id ? 'bg-emerald-600/20 border-emerald-500' : 'bg-slate-800 border-slate-700'}`}
+              onPress={() => setSelectedVehicleId(vehicle.id)}
+            >
+              <Text className="text-white font-semibold">{vehicle.make} {vehicle.model}</Text>
+              <Text className="text-slate-400 text-sm">Plate: {vehicle.licensePlate}</Text>
             </TouchableOpacity>
           ))}
         </View>
       )}
 
       <TouchableOpacity
-        className={`rounded-lg p-4 items-center min-h-[56px] justify-center mt-4 ${submitting || !selectedDriverId ? 'bg-slate-700' : 'bg-emerald-600'}`}
+        className={`rounded-lg p-4 items-center min-h-[56px] justify-center mt-4 ${submitting || !selectedDriverId || !selectedVehicleId ? 'bg-slate-700' : 'bg-blue-600'}`}
         onPress={handleCreateTrip}
-        disabled={submitting || !selectedDriverId}
+        disabled={submitting || !selectedDriverId || !selectedVehicleId}
       >
         {submitting ? (
           <ActivityIndicator color="#fff" />

@@ -1,7 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { db, auth } from '../../config/firebase';
-import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, updateDoc, getDoc } from 'firebase/firestore';
+
+const VehicleInfo = ({ vehicleId }: { vehicleId: string }) => {
+  const [vehicle, setVehicle] = useState<any>(null);
+  
+  useEffect(() => {
+    if (!vehicleId) return;
+    const fetchVehicle = async () => {
+      const docSnap = await getDoc(doc(db, 'vehicles', vehicleId));
+      if (docSnap.exists()) {
+        setVehicle(docSnap.data());
+      }
+    };
+    fetchVehicle();
+  }, [vehicleId]);
+
+  if (!vehicle) return null;
+
+  return (
+    <View className="bg-slate-700/50 p-3 rounded-lg mb-4 flex-row justify-between items-center">
+      <View>
+        <Text className="text-slate-400 text-xs uppercase font-bold">Assigned Vehicle</Text>
+        <Text className="text-white font-semibold">{vehicle.make} {vehicle.model}</Text>
+      </View>
+      <View className="bg-slate-800 px-3 py-1 rounded border border-slate-600">
+        <Text className="text-emerald-400 font-mono font-bold">{vehicle.licensePlate}</Text>
+      </View>
+    </View>
+  );
+};
 
 export default function PendingTripsScreen() {
   const [trips, setTrips] = useState<any[]>([]);
@@ -86,10 +115,12 @@ export default function PendingTripsScreen() {
               
               <View className="w-0.5 h-4 bg-slate-700 ml-1 mb-2" />
               
-              <View className="flex-row items-center mb-6">
+              <View className="flex-row items-center mb-4">
                 <View className="w-2 h-2 rounded-full bg-red-500 mr-3" />
                 <Text className="text-slate-300 flex-1">{item.dropoffLocation}</Text>
               </View>
+
+              {item.vehicleId && <VehicleInfo vehicleId={item.vehicleId} />}
 
               <TouchableOpacity 
                 className="bg-emerald-600 p-4 rounded-lg items-center"

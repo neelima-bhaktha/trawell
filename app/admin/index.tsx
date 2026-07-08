@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { db, auth } from '../../config/firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { useRouter } from 'expo-router';
@@ -50,20 +51,30 @@ export default function AdminDashboard() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-slate-900 px-6 pt-10" contentContainerStyle={{ paddingBottom: 60 }}>
-      <View className="flex-row justify-between items-center mb-6">
-        <Text className="text-3xl font-bold text-white">Dashboard</Text>
-        <TouchableOpacity onPress={handleLogout} className="bg-red-600/20 px-4 py-2 rounded-lg">
-          <Text className="text-red-400 font-bold">Log Out</Text>
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView className="flex-1 bg-slate-900">
+      <ScrollView className="flex-1 px-6 pt-4" contentContainerStyle={{ paddingBottom: 60 }}>
+        <View className="flex-row justify-between items-center mb-6">
+          <Text className="text-3xl font-bold text-white">Dashboard</Text>
+          <TouchableOpacity onPress={handleLogout} className="bg-red-600/20 px-4 py-2 rounded-lg">
+            <Text className="text-red-400 font-bold">Log Out</Text>
+          </TouchableOpacity>
+        </View>
 
-      <TouchableOpacity 
-        className="bg-emerald-600 p-4 rounded-xl mb-8 items-center"
-        onPress={() => router.push('/admin/create-trip' as any)}
-      >
-        <Text className="text-white font-bold text-lg">+ Create New Trip</Text>
-      </TouchableOpacity>
+        <View className="flex-row mb-8">
+          <TouchableOpacity 
+            className="bg-emerald-600 p-4 rounded-xl flex-1 items-center mr-4"
+            onPress={() => router.push('/admin/create-trip' as any)}
+          >
+            <Text className="text-white font-bold text-lg">+ Create Trip</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            className="bg-blue-600 p-4 rounded-xl flex-1 items-center"
+            onPress={() => router.push('/admin/vehicles' as any)}
+          >
+            <Text className="text-white font-bold text-lg">Vehicles</Text>
+          </TouchableOpacity>
+        </View>
       
       
       <Text className="text-slate-400 mb-4 font-semibold uppercase tracking-wider">Active Trips</Text>
@@ -121,6 +132,7 @@ export default function AdminDashboard() {
           )}
         />
       )}
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
