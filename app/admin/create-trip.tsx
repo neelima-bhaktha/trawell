@@ -10,6 +10,9 @@ export default function CreateTripScreen() {
   const router = useRouter();
 
   const [passengerName, setPassengerName] = useState('');
+  const [passengerGender, setPassengerGender] = useState('Male');
+  const [pickupTime, setPickupTime] = useState('');
+  const [passengerContact, setPassengerContact] = useState('');
   const [pickup, setPickup] = useState('');
   const [dropoff, setDropoff] = useState('');
 
@@ -84,7 +87,7 @@ export default function CreateTripScreen() {
   }, []);
 
   const handleCreateTrip = async () => {
-    if (!passengerName || !pickup || !dropoff || !selectedDriverId || !selectedVehicleId) {
+    if (!passengerName || !passengerContact || !pickupTime || !pickup || !dropoff || !selectedDriverId || !selectedVehicleId) {
       Alert.alert('Missing Info', 'Please fill out all fields, and select a driver and vehicle.');
       return;
     }
@@ -93,6 +96,9 @@ export default function CreateTripScreen() {
     try {
       await addDoc(collection(db, 'trips'), {
         passengerName,
+        passengerGender,
+        pickupTime,
+        passengerContact,
         pickupLocation: pickup,
         dropoffLocation: dropoff,
         driverId: selectedDriverId,
@@ -138,6 +144,38 @@ export default function CreateTripScreen() {
         placeholderTextColor="#64748B"
         value={passengerName}
         onChangeText={setPassengerName}
+      />
+
+      <Text className="text-slate-300 font-semibold mb-2">Passenger Gender</Text>
+      <View className="flex-row mb-4">
+        {['Male', 'Female', 'Other'].map(opt => (
+          <TouchableOpacity
+            key={opt}
+            onPress={() => setPassengerGender(opt)}
+            className={`flex-1 p-3 rounded-lg border mr-2 items-center ${passengerGender === opt ? 'bg-blue-600/20 border-blue-500' : 'bg-slate-800 border-slate-700'}`}
+          >
+            <Text className={`font-bold ${passengerGender === opt ? 'text-blue-400' : 'text-slate-400'}`}>{opt}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Text className="text-slate-300 font-semibold mb-2">Contact Number</Text>
+      <TextInput
+        className="bg-slate-800 text-white rounded-lg p-4 mb-4 border border-slate-700"
+        placeholder="e.g. +91 9876543210"
+        placeholderTextColor="#64748B"
+        keyboardType="phone-pad"
+        value={passengerContact}
+        onChangeText={setPassengerContact}
+      />
+
+      <Text className="text-slate-300 font-semibold mb-2">Pickup Time</Text>
+      <TextInput
+        className="bg-slate-800 text-white rounded-lg p-4 mb-4 border border-slate-700"
+        placeholder="e.g. 10:30 AM"
+        placeholderTextColor="#64748B"
+        value={pickupTime}
+        onChangeText={setPickupTime}
       />
 
       <Text className="text-slate-300 font-semibold mb-2">Pickup Location</Text>
