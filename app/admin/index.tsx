@@ -62,17 +62,24 @@ export default function AdminDashboard() {
 
         <View className="flex-row mb-8">
           <TouchableOpacity 
-            className="bg-emerald-600 p-4 rounded-xl flex-1 items-center mr-4"
+            className="bg-emerald-600 p-4 rounded-xl flex-1 items-center mr-3"
             onPress={() => router.push('/admin/create-trip' as any)}
           >
-            <Text className="text-white font-bold text-lg">+ Create Trip</Text>
+            <Text className="text-white font-bold text-center">Create Trip</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            className="bg-blue-600 p-4 rounded-xl flex-1 items-center"
+            className="bg-blue-600 p-4 rounded-xl flex-1 items-center mr-3"
             onPress={() => router.push('/admin/vehicles' as any)}
           >
-            <Text className="text-white font-bold text-lg">Vehicles</Text>
+            <Text className="text-white font-bold text-center">Vehicles</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            className="bg-purple-600 p-4 rounded-xl flex-1 items-center"
+            onPress={() => router.push('/admin/history' as any)}
+          >
+            <Text className="text-white font-bold text-center">Billing</Text>
           </TouchableOpacity>
         </View>
       
