@@ -62,7 +62,20 @@ export default function CompletedTripsScreen() {
                 <Text className="text-emerald-500 font-semibold">Done</Text>
               </View>
               <Text className="text-slate-400 text-sm mb-1">From: {item.pickupLocation}</Text>
-              <Text className="text-slate-400 text-sm">To: {item.dropoffLocation}</Text>
+              <Text className="text-slate-400 text-sm mb-3">To: {item.dropoffLocation}</Text>
+
+              {item.postTrip && (
+                <View className="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
+                  <View className="flex-row justify-between mb-1">
+                    <Text className="text-slate-400 text-xs uppercase font-bold">Total Distance</Text>
+                    <Text className="text-white font-mono font-bold">{item.postTrip.distance} KM</Text>
+                  </View>
+                  <View className="flex-row justify-between">
+                    <Text className="text-slate-400 text-xs uppercase font-bold">Ending Fuel</Text>
+                    <Text className="text-white font-mono font-bold">{item.postTrip.fuelLevel}</Text>
+                  </View>
+                </View>
+              )}
             </View>
           )}
         />
